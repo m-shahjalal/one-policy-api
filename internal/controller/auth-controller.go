@@ -82,7 +82,6 @@ func (ctrl *AuthController) Register(c *gin.Context) {
 
 // Login authenticates a user and returns a token
 func (ctrl *AuthController) Login(c *gin.Context) {
-	// Example request structure
 	type LoginRequest struct {
 		Email    string `json:"email" binding:"required,email"`
 		Password string `json:"password" binding:"required"`
@@ -90,6 +89,7 @@ func (ctrl *AuthController) Login(c *gin.Context) {
 
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		println("error", err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})

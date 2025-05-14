@@ -3,10 +3,11 @@ package utils
 import (
 	"errors"
 	"fmt"
+	"os"
+	"strconv"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/m-shahjalal/onepolicy-api/config"
 )
 
 // TokenClaims defines the claims for JWT tokens
@@ -18,11 +19,20 @@ type TokenClaims struct {
 
 // GenerateTokenPair creates a new access and refresh token pair
 func GenerateTokenPair(userID uint, email string) (string, string, error) {
-	// Get token settings from config
-	accessTokenExpiry := time.Duration(config.AppConfig.JWT.AccessTokenExpiryMinutes) * time.Minute
-	refreshTokenExpiry := time.Duration(config.AppConfig.JWT.RefreshTokenExpiryDays) * 24 * time.Hour
-	jwtSecret := []byte(config.AppConfig.JWT.Secret)
-
+	accessTokenMinutes, err := strconv.Atoi(os.Getenv("JWT_ACCESS_TOKEN_EXPIRY_MINUTES"))
+	if err != nil {
+		return "", "", fmt.Errorf("invalid JWT_ACCESS_TOKEN_EXPIRY_MINUTES: %v", err)
+	}
+	refreshTokenDays, err := strconv.Atoi(os.Getenv("JWT_REFRESH_TOKEN_EXPIRY_DAYS"))
+	if err != nil {
+		return "", "", fmt.Errorf("invalid JWT_REFRESH_TOKEN_EXPIRY_DAYS: %v", err)
+	}
+	accessTokenExpiry := time.Duration(accessTokenMinutes) * time.Minute
+	refreshTokenExpiry := time.Duration(refreshTokenDays) * 24 * time.Hour
+	jwtSecret := []byte(os.Getenv("JWT_SECRET"))
+	if jwtSecret == nil {
+		return "", "", errors.New("JWT_SECRET is not set")
+	}
 	// Generate access token
 	accessTokenClaims := TokenClaims{
 		UserID: userID,
@@ -66,7 +76,7 @@ func GenerateTokenPair(userID uint, email string) (string, string, error) {
 
 // ValidateToken parses and validates a JWT token
 func ValidateToken(tokenString string) (*TokenClaims, error) {
-	jwtSecret := []byte(config.AppConfig.JWT.Secret)
+	jwtSecret := []byte(os.Getenv("JWT_SECRET"))
 
 	token, err := jwt.ParseWithClaims(tokenString, &TokenClaims{}, func(token *jwt.Token) (interface{}, error) {
 		// Validate signing method

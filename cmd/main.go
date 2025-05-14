@@ -6,7 +6,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/m-shahjalal/onepolicy-api/config"
-	"github.com/m-shahjalal/onepolicy-api/internal/model"
 	"github.com/m-shahjalal/onepolicy-api/internal/router"
 )
 
@@ -16,7 +15,6 @@ func init() {
 }
 
 func main() {
-	config.DB.AutoMigrate(&model.User{})
 	port := os.Getenv("PORT")
 
 	app := gin.New()
