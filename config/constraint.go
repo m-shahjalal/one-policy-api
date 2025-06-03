@@ -22,6 +22,7 @@ INSTRUCTIONS:
 6. **Tailor to User Data**: Include only the categories and details specified in the user data. Omit sections for which no data is provided.
 7. **Format as Clean Markdown**: Ensure the document is well-formatted and easy to read.
 8. **Effective Date and Last Updated**: Include these only if provided in the user data.
+9. **Don't include any other supporting string to describe the response**: just give raw markdown text without any quote and more then nothing.
 
 REQUIREMENTS:
 - Use professional, clear, and legally appropriate language.
@@ -33,80 +34,4 @@ USER DATA:
 %s
 
 Based on the provided user data and the specified policy type, generate the complete policy document in Markdown format. Ensure it is comprehensive, legally appropriate, and tailored to the user's needs.
-`
-
-var DummyResult = `
-# Cookie Policy for Hedda Franks
-
-## Introduction
-
-This Cookie Policy ("Policy") explains how Clark Conley LLC ("we," "us," or "our") uses cookies and similar tracking technologies on the website [https://www.cuwybuwy.me.uk](https://www.cuwybuwy.me.uk) (the "Site"). By accessing or using the Site, you consent to the use of cookies as described in this Policy. 
-
-This Policy is designed to comply with the **General Data Protection Regulation (GDPR)** and other applicable laws in **Aspernatur vel velit**. 
-
----
-
-## What Are Cookies?
-
-Cookies are small text files stored on your device when you visit a website. They enable the Site to remember your actions and preferences (e.g., login details, language preferences) over time, improving your browsing experience.
-
----
-
-## Types of Cookies We Use
-
-Based on your interaction with our Site, we use the following categories of cookies:
-
-| **Category**       | **Purpose**                                                                 | **Duration** |
-|--------------------|-----------------------------------------------------------------------------|-------------|
-| Necessary Cookies | Essential for the Site to function (e.g., security, load balancing).        | Session     |
-
-**Notes:**
-- **Necessary Cookies** are always active and do not require user consent under GDPR.
-- We do not use preference, analytics, advertising, social media, content, or personalization cookies at this time.
-
----
-
-## How We Use Cookies
-
-Cookies on our Site are used for the following purposes:
-- **Site Functionality**: To ensure the Site operates correctly and securely.
-- **First-Party Origin**: All cookies are set by us (no third-party cookies are used).
-
----
-
-## Cookie Management and Consent
-
-### Consent Mechanism
-We respect your privacy rights and provide the following options for managing cookies:
-- **Category Selection**: You may adjust cookie preferences via our cookie consent tool (if enabled).
-- **Browser Settings**: You can disable or delete cookies through your browser settings. However, blocking necessary cookies may affect Site functionality.
-
-**Instructions for Browser Settings:**
-- Chrome: Settings > Privacy and Security > Cookies and Site Data
-- Firefox: Options > Privacy & Security > Cookies and Site Data
-- Safari: Preferences > Privacy > Manage Website Data
-
----
-
-## Your Rights and Choices
-
-Under GDPR, you have the following rights regarding cookies:
-1. **Right to Access**: Request details about the cookies we use.
-2. **Right to Withdraw Consent**: Adjust preferences or disable non-essential cookies.
-3. **Right to Complain**: Lodge a complaint with a supervisory authority in **Aspernatur vel velit**.
-
----
-
-## Contact Information
-
-For questions or requests related to this Policy, contact us via:
-- **Email**: [hynomicisu@mailinator.com](mailto:hynomicisu@mailinator.com)
-- **Phone**: +1 (342) 352-7733
-- **Mailing Address**: Consequuntur ducimus
-
----
-
-## Updates to This Policy
-
-We may update this Policy periodically to reflect changes in our practices or legal requirements. The latest version will always be posted on this page.
 `

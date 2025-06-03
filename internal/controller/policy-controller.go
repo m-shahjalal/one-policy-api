@@ -36,6 +36,7 @@ func (ctrl PolicyController) CreateCookiePolicy(c *gin.Context) {
 	}
 
 	markdown, err := utils.GeneratePolicy(data)
+	println(markdown)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to generate policy",
