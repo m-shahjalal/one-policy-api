@@ -11,7 +11,7 @@ import (
 	"github.com/m-shahjalal/onepolicy-api/config"
 )
 
-type Response struct {
+type APIResponse struct {
 	Choices []struct {
 		Message struct {
 			Content string `json:"content"`
@@ -38,7 +38,7 @@ func GeneratePolicy(data any) (string, error) {
 		return "", err
 	}
 
-	var resp Response
+	var resp APIResponse
 	if err := json.Unmarshal(body, &resp); err != nil {
 		return "", err
 	}
@@ -56,6 +56,7 @@ func GeneratePolicy(data any) (string, error) {
 
 func buildPrompt(data any) string {
 	var dataStr string
+
 	switch v := data.(type) {
 	case string:
 		dataStr = v
@@ -68,6 +69,7 @@ func buildPrompt(data any) string {
 			dataStr = fmt.Sprintf("%+v", v)
 		}
 	}
+
 	return fmt.Sprintf(config.PromptDirectives, dataStr)
 }
 
@@ -85,7 +87,8 @@ func makeRequest(url string, data any) ([]byte, error) {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+os.Getenv("OPENROUTER_API_KEY"))
 
-	resp, err := (&http.Client{}).Do(req)
+	client := &http.Client{}
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
