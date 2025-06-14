@@ -2,97 +2,92 @@ package utils
 
 import (
 	"errors"
-	"fmt"
 	"os"
-	"strconv"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
-// TokenClaims defines the claims for JWT tokens
 type TokenClaims struct {
-	UserID uint   `json:"user_id"`
-	Email  string `json:"email"`
+	UserID uuid.UUID `json:"user_id"`
+	Email  string    `json:"email"`
 	jwt.RegisteredClaims
 }
 
-// GenerateTokenPair creates a new access and refresh token pair
-func GenerateTokenPair(userID uint, email string) (string, string, error) {
-	accessTokenMinutes, err := strconv.Atoi(os.Getenv("JWT_ACCESS_TOKEN_EXPIRY_MINUTES"))
-	if err != nil {
-		return "", "", fmt.Errorf("invalid JWT_ACCESS_TOKEN_EXPIRY_MINUTES: %v", err)
-	}
-	refreshTokenDays, err := strconv.Atoi(os.Getenv("JWT_REFRESH_TOKEN_EXPIRY_DAYS"))
-	if err != nil {
-		return "", "", fmt.Errorf("invalid JWT_REFRESH_TOKEN_EXPIRY_DAYS: %v", err)
-	}
-	accessTokenExpiry := time.Duration(accessTokenMinutes) * time.Minute
-	refreshTokenExpiry := time.Duration(refreshTokenDays) * 24 * time.Hour
-	jwtSecret := []byte(os.Getenv("JWT_SECRET"))
-	if jwtSecret == nil {
-		return "", "", errors.New("JWT_SECRET is not set")
-	}
-	// Generate access token
-	accessTokenClaims := TokenClaims{
-		UserID: userID,
-		Email:  email,
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(accessTokenExpiry)),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			NotBefore: jwt.NewNumericDate(time.Now()),
-			Issuer:    "onepolicy-api",
-			Subject:   fmt.Sprintf("%d", userID),
-		},
+func ExtractAccessToken(c *gin.Context) (string, error) {
+	// First try to get token from cookie
+	if token, err := c.Cookie("access_token"); err == nil && token != "" {
+		return token, nil
 	}
 
-	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, accessTokenClaims)
-	accessTokenString, err := accessToken.SignedString(jwtSecret)
-	if err != nil {
-		return "", "", err
-	}
-
-	// Generate refresh token with longer expiry
-	refreshTokenClaims := TokenClaims{
-		UserID: userID,
-		Email:  email,
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(refreshTokenExpiry)),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			NotBefore: jwt.NewNumericDate(time.Now()),
-			Issuer:    "onepolicy-api",
-			Subject:   fmt.Sprintf("%d", userID),
-		},
-	}
-
-	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshTokenClaims)
-	refreshTokenString, err := refreshToken.SignedString(jwtSecret)
-	if err != nil {
-		return "", "", err
-	}
-
-	return accessTokenString, refreshTokenString, nil
+	return "", errors.New("no token found")
 }
 
-// ValidateToken parses and validates a JWT token
-func ValidateToken(tokenString string) (*TokenClaims, error) {
-	jwtSecret := []byte(os.Getenv("JWT_SECRET"))
+func ExtractRefreshToken(c *gin.Context) (string, error) {
+	token, err := c.Cookie("refresh_token")
+	if err == nil && token != "" {
+		return token, nil
+	}
 
-	token, err := jwt.ParseWithClaims(tokenString, &TokenClaims{}, func(token *jwt.Token) (interface{}, error) {
-		// Validate signing method
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+	return "", errors.New("no refresh token found")
+}
+
+func GenerateTokens(userID uuid.UUID, email string) (string, string, error) {
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		return "", "", errors.New("JWT_SECRET not set")
+	}
+
+	accessDuration, _ := time.ParseDuration(os.Getenv("JWT_ACCESS_TOKEN_EXPIRY"))
+	refreshDuration, _ := time.ParseDuration(os.Getenv("JWT_REFRESH_TOKEN_EXPIRY"))
+
+	now := time.Now()
+	claims := func(duration time.Duration) *TokenClaims {
+		return &TokenClaims{
+			UserID: userID,
+			Email:  email,
+			RegisteredClaims: jwt.RegisteredClaims{
+				IssuedAt:  jwt.NewNumericDate(now),
+				ExpiresAt: jwt.NewNumericDate(now.Add(duration)),
+				Issuer:    "OnePolicy",
+			},
 		}
-		return jwtSecret, nil
+	}
+
+	signToken := func(claims *TokenClaims) (string, error) {
+		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+		return token.SignedString([]byte(secret))
+	}
+
+	accessToken, err := signToken(claims(accessDuration))
+	if err != nil {
+		return "", "", err
+	}
+
+	refreshToken, err := signToken(claims(refreshDuration))
+	if err != nil {
+		return "", "", err
+	}
+
+	return accessToken, refreshToken, nil
+}
+
+func ValidateToken(tokenString string) (*TokenClaims, error) {
+
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		return nil, errors.New("JWT_SECRET not set")
+	}
+
+	token, err := jwt.ParseWithClaims(tokenString, &TokenClaims{}, func(token *jwt.Token) (any, error) {
+		return []byte(secret), nil
 	})
 
-	if err != nil {
-		return nil, err
+	if err != nil || !token.Valid {
+		return nil, errors.New("invalid token")
 	}
 
-	if claims, ok := token.Claims.(*TokenClaims); ok && token.Valid {
-		return claims, nil
-	}
-
-	return nil, errors.New("invalid token")
+	return token.Claims.(*TokenClaims), nil
 }

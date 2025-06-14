@@ -1,4 +1,12 @@
 {
-  "cSpell.words": ["dbname", "godotenv", "gorm", "joho", "onepolicy"],
-  "postman.settings.dotenv-detection-notification-visibility": false
+  "cSpell.words": [
+    "dbname",
+    "eqfield",
+    "godotenv",
+    "gorm",
+    "joho",
+    "onepolicy",
+    "OPENROUTER",
+    "typname"
+  ]
 }

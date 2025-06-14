@@ -49,14 +49,14 @@ func ConnectDB() {
 	sqlDB.SetConnMaxIdleTime(time.Minute * 5)
 
 	if err = EnableExtensions(DB); err != nil {
-		log.Fatal("Failed to enable extentions")
+		log.Fatal("Failed to enable extensions")
 	}
 
 	if err = InitMigration(DB); err != nil {
 		log.Fatal("Failed to migrate database: ", err)
 	}
 
-	println("Database is successfully initalized 🎉")
+	println("Database is successfully initialized 🎉")
 }
 
 func EnableExtensions(db *gorm.DB) error {
@@ -64,7 +64,6 @@ func EnableExtensions(db *gorm.DB) error {
 }
 
 func InitMigration(DB *gorm.DB) error {
-	// Create enum type if not exists
 	DB.Exec(`DO $$ 
 	BEGIN
 		IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'policy_type') THEN
@@ -72,14 +71,27 @@ func InitMigration(DB *gorm.DB) error {
 		END IF;
 	END $$;`)
 
-	// Initialize migrator with optimized settings
 	migrator := NewSmartMigrator(DB)
-
-	// Batch migrate all models at once
-	err := migrator.MigrateIfChanged(&model.User{}, &model.Policy{})
-	if err != nil {
-		panic(err)
+	if err := migrator.MigrateIfChanged(&model.User{}); err != nil {
+		return err
 	}
 
-	return err
+	var defaultUser model.User
+	if err := DB.First(&defaultUser).Error; err != nil {
+		defaultUser = model.User{
+			Name:     "System",
+			Email:    "system@onepolicy.com",
+			Password: "Pass@123",
+		}
+		if err := DB.Create(&defaultUser).Error; err != nil {
+			return err
+		}
+		log.Println("Default user created:", defaultUser.Name)
+	}
+
+	if err := migrator.MigrateIfChanged(&model.Policy{}); err != nil {
+		return err
+	}
+
+	return nil
 }

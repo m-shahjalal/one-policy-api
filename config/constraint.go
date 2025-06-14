@@ -1,5 +1,13 @@
 package config
 
+const (
+	UserContextKey   = "user"
+	UserIDContextKey = "user_id"
+	IsAuthContextKey = "is_authenticated"
+	TokenContextKey  = "token"
+	ClaimsContextKey = "claims"
+)
+
 var PromptDirectives = `
 You are an legal expert specializing in internet policies. Generate a professional policy document (Cookie Policy, Terms and Conditions, or Privacy Policy) in MARKDOWN format based on user data.
 

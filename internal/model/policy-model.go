@@ -3,10 +3,14 @@ package model
 import (
 	"database/sql/driver"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Policy struct {
 	ModelHeader
+	UserID      *uuid.UUID `gorm:"type:uuid" json:"user_id"`
+	User        User       `gorm:"foreignKey:UserID" json:"user"`
 	Inputs      string
 	Effect_date time.Time `gorm:"default:NOW()"`
 	Markdown    string

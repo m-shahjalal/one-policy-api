@@ -12,5 +12,4 @@ func PolicyRoutes(r *gin.Engine) {
 	group.GET("/cookies", policyCtrl.GetCookiePolicy)
 	group.POST("/cookies", policyCtrl.CreateCookiePolicy)
 	group.GET("cookies/:id", policyCtrl.GetPolicyById)
-
 }

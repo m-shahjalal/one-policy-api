@@ -17,9 +17,6 @@ func RootRoutes(r *gin.Engine) {
 	r.GET("/health", func(ctx *gin.Context) {
 		ctx.JSON(200, gin.H{"message": "OK"})
 	})
-	r.GET("/kaithhealthcheck", func(ctx *gin.Context) {
-		ctx.JSON(200, gin.H{"message": "OK"})
-	})
 	r.GET("/status", func(ctx *gin.Context) {
 		ctx.JSON(200, gin.H{"status": "OK"})
 	})

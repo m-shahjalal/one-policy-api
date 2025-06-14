@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/m-shahjalal/onepolicy-api/config"
 	"github.com/m-shahjalal/onepolicy-api/internal/model"
 	"github.com/m-shahjalal/onepolicy-api/utils"
@@ -36,10 +37,17 @@ func (ctrl PolicyController) CreateCookiePolicy(c *gin.Context) {
 	}
 
 	markdown, err := utils.GeneratePolicy(data)
-	println(markdown)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to generate policy",
+		})
+		return
+	}
+
+	userID := utils.GetUserID(c)
+	if userID == uuid.Nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "User ID is required",
 		})
 		return
 	}
@@ -49,6 +57,7 @@ func (ctrl PolicyController) CreateCookiePolicy(c *gin.Context) {
 		Markdown:    markdown,
 		Policy_type: model.Cookie,
 		Effect_date: time.Now(),
+		UserID:      &userID,
 	}
 
 	if err := config.DB.Create(&policy).Error; err != nil {

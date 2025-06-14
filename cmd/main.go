@@ -12,7 +12,6 @@ import (
 func init() {
 	config.LoadEnvVariables()
 	config.ConnectDB()
-	config.InitMigration(config.DB)
 }
 
 func main() {
@@ -20,7 +19,6 @@ func main() {
 	app := gin.New()
 
 	// middlewares
-	app.Use(gin.Logger())
 	app.Use(gin.Recovery())
 	app.Use(middleware.Cors())
 
