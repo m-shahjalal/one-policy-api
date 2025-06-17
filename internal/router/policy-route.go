@@ -9,7 +9,11 @@ func PolicyRoutes(r *gin.Engine) {
 	policyCtrl := controller.PolicyController{}
 	group := r.Group("/policies")
 
-	group.GET("/cookies", policyCtrl.GetCookiePolicy)
-	group.POST("/cookies", policyCtrl.CreateCookiePolicy)
-	group.GET("cookies/:id", policyCtrl.GetPolicyById)
+	group.GET("/", policyCtrl.GetAllPolicies)
+	group.GET("/:id", policyCtrl.GetPolicyById)
+
+	group.PUT("/:id/edit", policyCtrl.UpdatePolicy)
+	group.DELETE("/:id", policyCtrl.DeletePolicy)
+
+	group.POST("/", policyCtrl.EditPolicyWithPrompt)
 }

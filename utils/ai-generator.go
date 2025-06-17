@@ -7,6 +7,8 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"regexp"
+	"strings"
 
 	"github.com/m-shahjalal/onepolicy-api/config"
 )
@@ -51,7 +53,8 @@ func GeneratePolicy(data any) (string, error) {
 		return "", fmt.Errorf("no response choices")
 	}
 
-	return resp.Choices[0].Message.Content, nil
+	markdown := CleanMarkdown(resp.Choices[0].Message.Content)
+	return markdown, nil
 }
 
 func buildPrompt(data any) string {
@@ -95,4 +98,31 @@ func makeRequest(url string, data any) ([]byte, error) {
 	defer resp.Body.Close()
 
 	return io.ReadAll(resp.Body)
+}
+
+func CleanMarkdown(content string) string {
+	if content == "" {
+		return ""
+	}
+
+	// Remove leading ```markdown\n
+	leadingPattern := regexp.MustCompile(`^` + "```markdown\n")
+	content = leadingPattern.ReplaceAllString(content, "")
+
+	// Remove trailing \n```
+	trailingPattern := regexp.MustCompile(`\n` + "```$")
+	content = trailingPattern.ReplaceAllString(content, "")
+
+	// Replace escaped quotes \" with "
+	content = strings.ReplaceAll(content, `\"`, `"`)
+
+	// Replace escaped newlines \n with actual newlines
+	content = strings.ReplaceAll(content, `\n`, "\n")
+
+	return content
+}
+
+func GetHeadFromMarkdown(markdown string) string {
+	lines := strings.Split(markdown, "\n")
+	return strings.TrimSpace(lines[0])
 }

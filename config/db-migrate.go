@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/m-shahjalal/onepolicy-api/internal/model"
 	"gorm.io/gorm"
 )
 
@@ -23,7 +24,7 @@ type SmartMigrator struct {
 	modelHashes   map[string]string
 }
 
-func NewSmartMigrator(db *gorm.DB) *SmartMigrator {
+func newSmartMigrator(db *gorm.DB) *SmartMigrator {
 	db.AutoMigrate(&ModelVersion{})
 
 	// Load all model versions into memory
@@ -42,7 +43,7 @@ func NewSmartMigrator(db *gorm.DB) *SmartMigrator {
 	}
 }
 
-func (sm *SmartMigrator) generateModelHash(model interface{}) string {
+func (sm *SmartMigrator) generateModelHash(model any) string {
 	modelName := reflect.TypeOf(model).Elem().Name()
 
 	// Check if hash is already cached
@@ -74,7 +75,7 @@ func (sm *SmartMigrator) generateModelHash(model interface{}) string {
 	return hash
 }
 
-func (sm *SmartMigrator) MigrateIfChanged(models ...interface{}) error {
+func (sm *SmartMigrator) migrateIfChanged(models ...any) error {
 	// Batch process all models
 	var modelsToMigrate []interface{}
 	var versionUpdates []*ModelVersion
@@ -128,6 +129,20 @@ func (sm *SmartMigrator) MigrateIfChanged(models ...interface{}) error {
 			}
 			return nil
 		})
+	}
+
+	return nil
+}
+
+func InitMigration(DB *gorm.DB) error {
+	migrator := newSmartMigrator(DB)
+
+	if err := migrator.migrateIfChanged(&model.User{}); err != nil {
+		return err
+	}
+
+	if err := migrator.migrateIfChanged(&model.Policy{}); err != nil {
+		return err
 	}
 
 	return nil

@@ -1,25 +1,23 @@
 package main
 
 import (
-	"os"
-
 	"github.com/gin-gonic/gin"
 	"github.com/m-shahjalal/onepolicy-api/config"
 	"github.com/m-shahjalal/onepolicy-api/internal/middleware"
 	"github.com/m-shahjalal/onepolicy-api/internal/router"
+	"github.com/m-shahjalal/onepolicy-api/internal/seed"
+	"os"
 )
 
 func init() {
 	config.LoadEnvVariables()
-	config.ConnectDB()
+	config.DatabaseConnection()
+	config.InitMigration(config.DB)
+	seed.SeedData(config.DB)
 }
 
 func main() {
-	// initialize the application
-	app := gin.New()
-
-	// middlewares
-	app.Use(gin.Recovery())
+	app := gin.Default()
 	app.Use(middleware.Cors())
 
 	// routers

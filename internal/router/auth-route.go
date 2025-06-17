@@ -16,6 +16,7 @@ func AuthRouter(r *gin.Engine) {
 
 	protected := r.Group("/auth")
 	protected.Use(middleware.AuthMiddleware())
+
 	protected.GET("/me", authCtrl.GetMe)
 	protected.POST("/logout", authCtrl.Logout)
 }

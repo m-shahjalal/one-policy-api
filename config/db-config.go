@@ -5,7 +5,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/m-shahjalal/onepolicy-api/internal/model"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -13,9 +12,8 @@ import (
 
 var DB *gorm.DB
 
-func ConnectDB() {
+func DatabaseConnection() {
 	var err error
-
 	if dsn := os.Getenv("DB_URL"); dsn == "" {
 		log.Fatal("DB_URL environment variable is not set")
 	}
@@ -48,7 +46,7 @@ func ConnectDB() {
 	sqlDB.SetConnMaxLifetime(time.Hour)
 	sqlDB.SetConnMaxIdleTime(time.Minute * 5)
 
-	if err = EnableExtensions(DB); err != nil {
+	if err = enableExtensions(DB); err != nil {
 		log.Fatal("Failed to enable extensions")
 	}
 
@@ -57,39 +55,32 @@ func ConnectDB() {
 	}
 
 	println("Database is successfully initialized 🎉")
+
 }
 
-func EnableExtensions(db *gorm.DB) error {
-	return db.Exec(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`).Error
-}
-
-func InitMigration(DB *gorm.DB) error {
-	DB.Exec(`DO $$ 
-	BEGIN
-		IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'policy_type') THEN
-			CREATE TYPE policy_type AS ENUM ('cookie', 'terms', 'privacy');
-		END IF;
-	END $$;`)
-
-	migrator := NewSmartMigrator(DB)
-	if err := migrator.MigrateIfChanged(&model.User{}); err != nil {
+func enableExtensions(db *gorm.DB) error {
+	// Create UUID extension
+	if err := db.Exec(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`).Error; err != nil {
 		return err
 	}
 
-	var defaultUser model.User
-	if err := DB.First(&defaultUser).Error; err != nil {
-		defaultUser = model.User{
-			Name:     "System",
-			Email:    "system@onepolicy.com",
-			Password: "Pass@123",
-		}
-		if err := DB.Create(&defaultUser).Error; err != nil {
-			return err
-		}
-		log.Println("Default user created:", defaultUser.Name)
+	// Create status_type enum if it doesn't exist
+	if err := db.Exec(`DO $$ 
+		BEGIN 
+			IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'status_type') THEN
+				CREATE TYPE status_type AS ENUM ('draft', 'published', 'archived');
+			END IF;
+		END $$;`).Error; err != nil {
+		return err
 	}
 
-	if err := migrator.MigrateIfChanged(&model.Policy{}); err != nil {
+	// Create policy_type enum if it doesn't exist
+	if err := db.Exec(`DO $$ 
+		BEGIN 
+			IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'policy_type') THEN
+				CREATE TYPE policy_type AS ENUM ('privacy', 'cookie', 'terms');
+			END IF;
+		END $$;`).Error; err != nil {
 		return err
 	}
 
